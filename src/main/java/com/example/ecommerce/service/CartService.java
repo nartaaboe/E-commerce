@@ -49,13 +49,15 @@ public class CartService {
         cartItemRepository.save(cartItem);
         cartRepository.save(cart);
     }
-    public Cart increaseQuantity(Long userId, Long cartItemId){
+    public CartItem increaseQuantity(Long userId, Long cartItemId){
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Cart cart = user.getCart();
+        CartItem item = new CartItem();
         boolean itemFound = false;
         for(CartItem cartItem : cart.getCartItems()){
             if(cartItem.getId().equals(cartItemId)){
                 cartItem.setQuantity(cartItem.getQuantity() + 1);
+                item = cartItem;
                 cartItemRepository.save(cartItem);
                 itemFound = true;
                 break;
@@ -65,7 +67,7 @@ public class CartService {
             throw new RuntimeException("Cart item not found");
         }
         cartRepository.save(cart);
-        return cart;
+        return item;
     }
     public Cart getCartByUserId(Long userId) {
         Optional<User> user = userRepository.findById(userId);

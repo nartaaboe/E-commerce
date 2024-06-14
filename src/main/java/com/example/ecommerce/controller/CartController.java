@@ -5,6 +5,7 @@ import com.example.ecommerce.entity.Cart;
 import com.example.ecommerce.entity.CartItem;
 import com.example.ecommerce.service.CartService;
 import com.example.ecommerce.service.OrderService;
+import com.example.ecommerce.service.kafka.consumer.CartEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +17,17 @@ public class CartController {
     private CartService cartService;
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private CartEventProducer cartEventProducer;
     @GetMapping("/{userId}")
     public ResponseEntity<Cart> getCartByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(cartService.getCartByUserId(userId));
     }
     @PutMapping("/{userId}/{cartItemId}")
     public ResponseEntity<Cart> increaseQuantity(@PathVariable Long userId, @PathVariable Long cartItemId) {
-        return ResponseEntity.ok(cartService.increaseQuantity(userId, cartItemId));
+        CartItem updatedCartItem = cartService.increaseQuantity(userId, cartItemId);
+        cartEventProducer.sendCartEvent(updatedCartItem);
+        return ResponseEntity.ok(updatedCartItem.getCart());
     }
     @PostMapping("/{userId}")
     public ResponseEntity<MessageResponse> placeOrder(@PathVariable Long userId){

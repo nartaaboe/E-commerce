@@ -35,6 +35,7 @@ public class SecurityConfig {
                                 .requestMatchers("/products/**").hasAnyAuthority("ADMIN", "USER")
                                 .requestMatchers("/carts/**").hasAnyAuthority("ADMIN", "USER")
                                 .requestMatchers("/orders/**").hasAnyAuthority("ADMIN", "USER")
+                                .requestMatchers("/ws/**").permitAll()
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(

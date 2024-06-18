@@ -19,7 +19,6 @@ import java.util.Map;
 
 @Configuration
 public class KafkaConfig {
-
     @Bean
     public NewTopic cartEventsTopic() {
         return TopicBuilder.name("cart-events")
@@ -28,7 +27,21 @@ public class KafkaConfig {
                 .build();
     }
     @Bean
-    public ProducerFactory<String, CartItem> producerFactory() {
+    public NewTopic orderEventsTopic() {
+        return TopicBuilder.name("order-events")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+    @Bean
+    public NewTopic productEventsTopic(){
+        return TopicBuilder.name("product-events")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+    @Bean
+    public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -37,24 +50,24 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, CartItem> kafkaTemplate() {
+    public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public ConsumerFactory<String, CartItem> consumerFactory() {
+    public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, CartItem.class);
         configProps.put(JsonDeserializer.KEY_DEFAULT_TYPE, String.class);
         return new DefaultKafkaConsumerFactory<>(configProps, new StringDeserializer(),
-                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(CartItem.class)));
+                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(Object.class)));
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, CartItem> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CartItem> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;

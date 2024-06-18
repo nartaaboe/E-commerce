@@ -1,7 +1,6 @@
 package com.example.ecommerce.controller;
 
 import com.example.ecommerce.dto.response.MessageResponse;
-import com.example.ecommerce.entity.Cart;
 import com.example.ecommerce.entity.Product;
 import com.example.ecommerce.service.CartService;
 import com.example.ecommerce.service.ProductService;
@@ -38,8 +37,7 @@ public class ProductController {
     }
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        productService.update(id, product);
-        return ResponseEntity.ok(product);
+        return ResponseEntity.ok(productService.update(id, product));
     }
     @PostMapping("/{userId}")
     public ResponseEntity<MessageResponse> addToCart(@PathVariable Long userId, @RequestBody Product product) {

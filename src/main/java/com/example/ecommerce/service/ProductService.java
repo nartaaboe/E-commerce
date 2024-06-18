@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class ProductService {
     @Autowired
     private ProductRepository productRepository;
@@ -19,17 +20,14 @@ public class ProductService {
     public Optional<Product> findById(Long id) {
         return productRepository.findById(id);
     }
-    @Transactional
     public void save(Product product) {
         productRepository.save(product);
     }
-    @Transactional
     public void deleteById(Long id) {
         productRepository.deleteById(id);
     }
-    @Transactional
-    public void update(Long id, Product product){
+    public Product update(Long id, Product product){
         product.setId(id);
-        productRepository.save(product);
+        return productRepository.save(product);
     }
 }

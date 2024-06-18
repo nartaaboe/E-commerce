@@ -6,8 +6,8 @@ import com.example.ecommerce.entity.Product;
 import com.example.ecommerce.entity.User;
 import com.example.ecommerce.repository.CartItemRepository;
 import com.example.ecommerce.repository.CartRepository;
-import com.example.ecommerce.repository.ProductRepository;
 import com.example.ecommerce.repository.UserRepository;
+import com.example.ecommerce.service.kafka.consumer.CartEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,18 +20,18 @@ import java.util.Optional;
 public class CartService {
     @Autowired
     private CartRepository cartRepository;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
-    private ProductRepository productRepository;
+    private CartEventProducer cartEventProducer;
     @Autowired
     private CartItemRepository cartItemRepository;
     public void  addToCart(Long userId, Product product) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Cart cart = user.getCart();
         CartItem cartItem = new CartItem();
+        if(product.getQuantity() < 1)
+            throw new RuntimeException("Product quantity is less than zero");
         cartItem.setProduct(product);
         if (cart == null) {
             cart = new Cart();
@@ -49,13 +49,16 @@ public class CartService {
         cartItemRepository.save(cartItem);
         cartRepository.save(cart);
     }
-    public CartItem increaseQuantity(Long userId, Long cartItemId){
+    public void increaseQuantity(Long userId, Long cartItemId){
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Cart cart = user.getCart();
         CartItem item = new CartItem();
         boolean itemFound = false;
         for(CartItem cartItem : cart.getCartItems()){
             if(cartItem.getId().equals(cartItemId)){
+                if(cartItem.getQuantity() == cartItem.getProduct().getQuantity()){
+                    throw new RuntimeException("Product quantity reach max available quantity.");
+                }
                 cartItem.setQuantity(cartItem.getQuantity() + 1);
                 item = cartItem;
                 cartItemRepository.save(cartItem);
@@ -67,7 +70,27 @@ public class CartService {
             throw new RuntimeException("Cart item not found");
         }
         cartRepository.save(cart);
-        return item;
+        cartEventProducer.sendCartEvent(item);
+    }
+    public void decreaseQuantity(Long userId, Long cartItemId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Cart cart = user.getCart();
+        CartItem item = new CartItem();
+        boolean itemFound = false;
+        for(CartItem cartItem : cart.getCartItems()){
+            if(cartItem.getId().equals(cartItemId)){
+                cartItem.setQuantity(cartItem.getQuantity() - 1);
+                item = cartItem;
+                cartItemRepository.save(cartItem);
+                itemFound = true;
+                break;
+            }
+        }
+        if (!itemFound) {
+            throw new RuntimeException("Cart item not found");
+        }
+        cartRepository.save(cart);
+        cartEventProducer.sendCartEvent(item);
     }
     public Cart getCartByUserId(Long userId) {
         Optional<User> user = userRepository.findById(userId);

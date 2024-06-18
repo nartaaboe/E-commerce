@@ -34,7 +34,10 @@ public class AuthService {
             user.setUsername(signupRequest.getUsername());
             user.setEmail(signupRequest.getEmail());
             user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-            user.setRole(signupRequest.getRole() == Role.USER.toString() ? Role.USER : Role.ADMIN);
+            if(signupRequest.getRole().equals("ADMIN"))
+                user.setRole(Role.ADMIN);
+            else
+                user.setRole(Role.USER);
             User result = userRepository.save(user);
             if(result.getId() > 0){
                 messageResponse.setMessage("User registered successfully");
@@ -56,6 +59,7 @@ public class AuthService {
             userResponse.setId(user.getId());
             userResponse.setUsername(user.getUsername());
             userResponse.setEmail(user.getEmail());
+            userResponse.setRole(user.getRole());
             var jwt = jwtUtils.generateToken(user);
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             jwtResponse.setToken(jwt);

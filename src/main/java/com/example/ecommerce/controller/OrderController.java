@@ -4,8 +4,8 @@ import com.example.ecommerce.dto.request.PaymentDetailsRequest;
 import com.example.ecommerce.dto.response.MessageResponse;
 import com.example.ecommerce.entity.Order;
 import com.example.ecommerce.entity.OrderStatus;
-import com.example.ecommerce.entity.Payment;
 import com.example.ecommerce.service.OrderService;
+import com.example.ecommerce.service.kafka.consumer.OrderEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +17,13 @@ import java.util.List;
 public class OrderController {
     @Autowired
     private OrderService orderService;
+    @GetMapping
+    public ResponseEntity<List<Order>> getOrders(){
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Order>> getOrders(@PathVariable Long userId){
-        return ResponseEntity.ok(orderService.getAllOrders(userId));
+    public ResponseEntity<List<Order>> getOrdersByUserId(@PathVariable Long userId){
+        return ResponseEntity.ok(orderService.getAllOrdersByUserId(userId));
     }
     @GetMapping("/{userId}/{id}")
     public ResponseEntity<Order> getOrder(@PathVariable Long userId, @PathVariable Long id){

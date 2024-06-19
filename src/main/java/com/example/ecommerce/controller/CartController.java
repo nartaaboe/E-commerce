@@ -36,9 +36,8 @@ public class CartController {
         return ResponseEntity.ok(new MessageResponse("decrease quantity."));
     }
     @PostMapping("/{userId}")
-    public ResponseEntity<MessageResponse> placeOrder(@PathVariable Long userId){
-        orderService.placeOrder(userId);
-        return ResponseEntity.ok(new MessageResponse("To complete order go on and put payment details."));
+    public ResponseEntity<Order> placeOrder(@PathVariable Long userId){
+        return ResponseEntity.ok(orderService.placeOrder(userId));
     }
     @DeleteMapping("/{userId}/{id}")
         public ResponseEntity<MessageResponse> removeFromCart(@PathVariable Long userId, @PathVariable Long id){

@@ -1,8 +1,8 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.dto.request.PaymentDetailsRequest;
 import com.example.ecommerce.entity.*;
 import com.example.ecommerce.repository.*;
+import com.example.ecommerce.service.kafka.consumer.CartEventProducer;
 import com.example.ecommerce.service.kafka.consumer.OrderEventProducer;
 import com.example.ecommerce.service.kafka.consumer.ProductEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -32,6 +31,8 @@ public class OrderService {
     @Autowired
     private ProductEventProducer productEventProducer;
     @Autowired
+    private CartEventProducer cartEventProducer;
+    @Autowired
     private CartItemRepository cartItemRepository;
 
     public List<Order> getAllOrders(){
@@ -46,7 +47,7 @@ public class OrderService {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return user.getOrders().stream().filter(o -> o.getId().equals(id)).findFirst().orElse(null);
     }
-    public void placeOrder(Long userId) {
+    public Order placeOrder(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found!"));
         Cart cart = user.getCart();
         if (cart == null || cart.getCartItems().isEmpty()) {
@@ -57,42 +58,25 @@ public class OrderService {
         order.setOrderItems(new ArrayList<>());
         order.setUser(user);
 
-        // Create a copy of the cart items to avoid ConcurrentModificationException
-        List<CartItem> cartItemsCopy = new ArrayList<>(cart.getCartItems());
 
-        for (CartItem cartItem : cartItemsCopy) {
+        for (CartItem cartItem : cart.getCartItems()) {
             OrderItem orderItem = new OrderItem();
-            Product product = cartItem.getProduct();
-            orderItem.setProduct(product);
+            orderItem.setProduct(cartItem.getProduct());
             orderItem.setQuantity(cartItem.getQuantity());
-
-            // Update product quantity
-            product.setQuantity(product.getQuantity() - cartItem.getQuantity());
-            productRepository.save(product);
-
-            // Produce product event
-            productEventProducer.sendProductEvent(product);
-
             orderItem.setOrder(order);
             order.getOrderItems().add(orderItem);
             orderItemRepository.save(orderItem);
-
-            // Remove cart item and delete it
-            cart.getCartItems().remove(cartItem);
-            cartItemRepository.delete(cartItem);
         }
 
         if (user.getOrders() == null) {
             user.setOrders(new ArrayList<>());
         }
         user.getOrders().add(order);
-
-        // Save order and user
         orderRepository.save(order);
         userRepository.save(user);
 
-        // Produce order event
         orderEventProducer.sendOrderEvent(order);
+        return order;
     }
 
     public Order updateOrderStatus(Long userId, Long id, OrderStatus orderStatus) {
@@ -105,22 +89,28 @@ public class OrderService {
     public void deleteOrder(Long userId, Long id) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found!"));
         Order order = user.getOrders().stream().filter(o -> o.getId().equals(id)).findFirst().orElseThrow(() -> new RuntimeException("Order not found!"));
-        for(OrderItem orderItem : order.getOrderItems()) {
-            orderItemRepository.delete(orderItem);
-        }
+        orderItemRepository.deleteAll(order.getOrderItems());
         orderRepository.delete(order);
     }
 
-    public Order putPaymentDetails(Long userId, Long id, PaymentDetailsRequest paymentDetailsRequest) {
+    public Order putPaymentDetails(Long userId, Long id, PaymentMethod paymentMethod) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found!"));
         Order order = user.getOrders().stream().filter(o -> o.getId().equals(id)).findFirst().orElseThrow(() -> new RuntimeException("Order not found!"));
         Payment payment = new Payment();
-        payment.setPaymentMethod(paymentDetailsRequest.getPaymentMethod());
-        payment.setStatus(paymentDetailsRequest.getStatus());
+        payment.setPaymentMethod(paymentMethod);
+        payment.setStatus(PaymentStatus.COMPLETED);
         order.setPayment(payment);
+        order.setStatus(OrderStatus.PENDING);
         payment.setOrder(order);
-        orderRepository.save(order);
+        for(OrderItem orderItem : order.getOrderItems()) {
+            Product product = orderItem.getProduct();
+            order.getUser().getCart().getCartItems().removeIf(cartItem -> cartItem.getProduct().equals(product));
+            product.setQuantity(product.getQuantity() - orderItem.getQuantity());
+            productEventProducer.sendProductEvent(product);
+        }
+        orderEventProducer.sendOrderEvent(order);
         paymentRepository.save(payment);
+        orderRepository.save(order);
         return order;
     }
 }

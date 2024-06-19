@@ -1,11 +1,10 @@
 package com.example.ecommerce.controller;
 
-import com.example.ecommerce.dto.request.PaymentDetailsRequest;
 import com.example.ecommerce.dto.response.MessageResponse;
 import com.example.ecommerce.entity.Order;
 import com.example.ecommerce.entity.OrderStatus;
+import com.example.ecommerce.entity.PaymentMethod;
 import com.example.ecommerce.service.OrderService;
-import com.example.ecommerce.service.kafka.consumer.OrderEventProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,9 +38,9 @@ public class OrderController {
                                                    @RequestBody OrderStatus orderStatus){
         return ResponseEntity.ok(orderService.updateOrderStatus(userId, id, orderStatus));
     }
-    @PutMapping("/{userId}/{id} ")
-    public ResponseEntity<Order> putPaymentDetails(@PathVariable Long userId, @PathVariable Long id
-            , @RequestBody PaymentDetailsRequest paymentDetailsRequest){
-        return ResponseEntity.ok(  orderService.putPaymentDetails(userId, id, paymentDetailsRequest));
+    @PutMapping("/{userId}/{id}/payment")
+    public ResponseEntity<Order> putPaymentDetails(@PathVariable Long userId, @PathVariable Long id,
+                                                   @RequestBody PaymentMethod paymentMethod){
+        return ResponseEntity.ok(orderService.putPaymentDetails(userId, id, paymentMethod));
     }
 }

@@ -10,8 +10,11 @@ import com.example.ecommerce.entity.Role;
 import com.example.ecommerce.entity.User;
 import com.example.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +30,8 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserDetailsService userDetailsService;
     public MessageResponse signUp(SignupRequest signupRequest){
         MessageResponse messageResponse = new MessageResponse();
         try{
@@ -83,7 +88,12 @@ public class AuthService {
         }
         return jwtResponse;
     }
-    public boolean isTokenExpired(String token){
-        return jwtUtils.isTokenExpired(token);
+    public boolean isTokenValid(String token){
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        String username = jwtUtils.extractUsername(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        return jwtUtils.isTokenValid(token, userDetails);
     }
 }

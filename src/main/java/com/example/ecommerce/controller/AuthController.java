@@ -27,4 +27,8 @@ public class AuthController {
     public ResponseEntity<JwtResponse> refresh(@RequestBody JwtResponse jwtResponse) {
         return ResponseEntity.ok(authService.refresh(jwtResponse));
     }
+    @PostMapping("/isTokenValid")
+    public Boolean isTokenValid(@RequestBody String token){
+        return authService.isTokenValid(token);
+    }
 }

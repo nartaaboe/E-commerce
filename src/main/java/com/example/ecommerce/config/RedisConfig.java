@@ -4,13 +4,16 @@ import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCust
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
 
 @Configuration
-public class RedisConfig{
+public class RedisConfig {
+
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
         return RedisCacheConfiguration
@@ -20,12 +23,21 @@ public class RedisConfig{
                         .SerializationPair
                         .fromSerializer(new GenericJackson2JsonRedisSerializer()));
     }
+
     @Bean
-    public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-        return (builder) -> builder
-                .withCacheConfiguration("product",
-                        RedisCacheConfiguration
-                                .defaultCacheConfig()
-                                .entryTtl(Duration.ofMinutes(20)));
+    public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory,
+                                          RedisCacheConfiguration cacheConfiguration) {
+        return RedisCacheManager.builder(redisConnectionFactory)
+                .cacheDefaults(cacheConfiguration)
+                .build();
     }
+
+//    @Bean
+//    public RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
+//        return (builder) -> builder
+//                .withCacheConfiguration("product",
+//                        RedisCacheConfiguration
+//                                .defaultCacheConfig()
+//                                .entryTtl(Duration.ofMinutes(20)));
+//    }
 }

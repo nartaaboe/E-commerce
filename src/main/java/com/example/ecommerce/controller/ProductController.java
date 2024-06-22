@@ -44,4 +44,8 @@ public class ProductController {
         cartService.addToCart(userId, product);
         return ResponseEntity.ok(new MessageResponse("saved to cart."));
     }
+    @GetMapping("/{categoryId}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(productService.getProductsByCategory(categoryId));
+    }
 }

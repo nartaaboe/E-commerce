@@ -39,7 +39,9 @@ public class AuthService {
             user.setUsername(signupRequest.getUsername());
             user.setEmail(signupRequest.getEmail());
             user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-            if(signupRequest.getRole().equals("ADMIN"))
+            if(signupRequest.getRole() == null)
+                user.setRole(Role.USER);
+            else if(signupRequest.getRole().equals("ADMIN"))
                 user.setRole(Role.ADMIN);
             else
                 user.setRole(Role.USER);

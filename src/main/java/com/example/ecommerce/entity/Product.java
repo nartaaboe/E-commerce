@@ -29,6 +29,7 @@ public class Product implements Serializable {
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private Category category;
+    @JsonIgnore
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "product")
     private List<Review> reviews;
     @JsonIgnore

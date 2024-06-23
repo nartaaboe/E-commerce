@@ -45,19 +45,10 @@ public class ProductService {
     }
     @Caching(evict = {
             @CacheEvict(value = "products", allEntries = true),
-            @CacheEvict(value = "product", key = "#product.id")
+            @CacheEvict(value = "product", key = "#id")
     })
     public Product update(Long id, Product product){
         product.setId(id);
         return productRepository.save(product);
-    }
-    @Cacheable(value = "categories")
-    public List<Category> getCategories(){
-        return categoryRepository.findAll();
-    }
-    @Cacheable(value = "category", key = "#categoryId")
-    public List<Product> getProductsByCategory(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new RuntimeException("Category not found."));
-        return productRepository.findProductsByCategory(category);
     }
 }

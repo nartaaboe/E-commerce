@@ -32,9 +32,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers("/auth/**").permitAll()
-                                .requestMatchers("/products/**").hasAnyAuthority("ADMIN", "USER")
+                                .requestMatchers("/categories/**").permitAll()
+                                .requestMatchers("/products/**").permitAll()
                                 .requestMatchers("/carts/**").hasAnyAuthority("ADMIN", "USER")
-                                .requestMatchers("/orders/**").hasAnyAuthority("ADMIN", "USER")
+                                .requestMatchers("/orders/**").hasAnyAuthority("ADMIN", "USER") 
                                 .requestMatchers("/ws/**").permitAll()
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

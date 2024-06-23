@@ -25,7 +25,7 @@ public class OrderService {
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
     @Autowired
     private OrderEventProducer orderEventProducer;
     @Autowired
@@ -104,13 +104,17 @@ public class OrderService {
         payment.setOrder(order);
         for(OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
-            order.getUser().getCart().getCartItems().removeIf(cartItem -> cartItem.getProduct().equals(product));
             product.setQuantity(product.getQuantity() - orderItem.getQuantity());
+            productService.save(product);
             productEventProducer.sendProductEvent(product);
         }
+        for(CartItem cartItem : order.getUser().getCart().getCartItems()){
+            cartItemRepository.delete(cartItem);
+        }
+        order.getUser().getCart().setCartItems(null);
+        orderRepository.save(order);
         orderEventProducer.sendOrderEvent(order);
         paymentRepository.save(payment);
-        orderRepository.save(order);
         return order;
     }
 }

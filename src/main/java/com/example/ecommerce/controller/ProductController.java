@@ -1,6 +1,7 @@
 package com.example.ecommerce.controller;
 
 import com.example.ecommerce.dto.response.MessageResponse;
+import com.example.ecommerce.entity.Category;
 import com.example.ecommerce.entity.Product;
 import com.example.ecommerce.service.CartService;
 import com.example.ecommerce.service.ProductService;
@@ -22,14 +23,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAll());
     }
     @PostMapping
-    public ResponseEntity<String> addProduct(@RequestBody Product product) {
+    public ResponseEntity<MessageResponse> addProduct(@RequestBody Product product) {
         productService.save(product);
-        return ResponseEntity.ok("Saved.");
+        return ResponseEntity.ok(new MessageResponse("Saved product successfully."));
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deleteProduct(@PathVariable Long id) {
         productService.deleteById(id);
-        return ResponseEntity.ok("Deleted.");
+        return ResponseEntity.ok(new MessageResponse("Deleted product successfully."));
     }
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
@@ -43,9 +44,5 @@ public class ProductController {
     public ResponseEntity<MessageResponse> addToCart(@PathVariable Long userId, @RequestBody Product product) {
         cartService.addToCart(userId, product);
         return ResponseEntity.ok(new MessageResponse("saved to cart."));
-    }
-    @GetMapping("/{categoryId}")
-    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(productService.getProductsByCategory(categoryId));
     }
 }

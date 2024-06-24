@@ -26,6 +26,7 @@ public class Product implements Serializable {
     private Double price;
     private Integer quantity;
     private Double rating;
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private Category category;

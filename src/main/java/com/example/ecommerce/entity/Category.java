@@ -19,6 +19,6 @@ public class Category {
     private String image;
     private String name;
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
+    @OneToMany(mappedBy = "category")
     private List<Product> products;
 }
